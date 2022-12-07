@@ -32,19 +32,21 @@ function love.load()
 
   sparrow.newColumn(engine, "position", "vec2")
   sparrow.newColumn(engine, "velocity", "vec2")
-
-  for i = 1, 20000 do
-    local x = love.math.random() * 2 - 1
-    local y = love.math.random() * 2 - 1
-
-    local dx = love.math.random() * 2 - 1
-    local dy = love.math.random() * 2 - 1
-
-    sparrow.newRow(engine, { position = { x, y }, velocity = { dx, dy } })
-  end
 end
 
 function love.update(dt)
+  for i = 1, 100 do
+    if engine._nextEntity <= 1000000 then
+      local x = love.math.random() * 2 - 1
+      local y = love.math.random() * 2 - 1
+
+      local dx = love.math.random() * 2 - 1
+      local dy = love.math.random() * 2 - 1
+
+      sparrow.newRow(engine, { position = { x, y }, velocity = { dx, dy } })
+    end
+  end
+
   local positions = engine:getColumn("position")
   local velocities = engine:getColumn("velocity")
 
@@ -66,5 +68,5 @@ function love.update(dt)
 end
 
 function love.draw()
-  love.graphics.print(love.timer.getFPS())
+  love.graphics.print(love.timer.getFPS() .. " FPS, " .. (engine._nextEntity - 1) .. " entities")
 end

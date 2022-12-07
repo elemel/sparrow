@@ -1,8 +1,9 @@
+local DataType = require("sparrow.DataType")
 local ffi = require("ffi")
 
 local M = {}
 
-function M.new(engine, component, typeName)
+function M.new(engine, component, valueType)
   if engine._columns[component] then
     error("Duplicate column: " .. component)
   end
@@ -12,17 +13,15 @@ function M.new(engine, component, typeName)
   column._engine = assert(engine)
   column._component = assert(component)
 
-  column._typeName = typeName
-  column._valueSize = typeName and ffi.sizeof(typeName)
-  column._defaultValue = typeName and ffi.typeof(typeName)()
-  column._valueAllocator = typeName and ffi.typeof(typeName .. "[?]")
+  column._valueType = valueType and DataType.new(valueType)
+  column._defaultValue = column._valueType and column._valueType.type()
 
   column._size = 0
   column._capacity = 2
 
   column._indices = {}
-  column._entities = engine._entityAllocator(column._capacity)
-  column._values = column._valueAllocator and column._valueAllocator(column._capacity) or {}
+  column._entities = engine._entityType.arrayType(column._capacity)
+  column._values = column._valueType and column._valueType.arrayType(column._capacity) or {}
 
   engine._columns[component] = column
   return setmetatable(column, M)
@@ -59,12 +58,12 @@ function M.__newindex(column, entity, value)
         local newCapacity = column._capacity * 2
         print("Reallocating column " .. column._component .. " to capacity " .. newCapacity)
 
-        local newEntities = column._engine._entityAllocator(newCapacity)
-        ffi.copy(newEntities, column._entities, column._engine._entitySize * column._size)
+        local newEntities = column._engine._entityType.arrayType(newCapacity)
+        ffi.copy(newEntities, column._entities, column._engine._entityType.size * column._size)
 
-        if column._typeName then
-          local newValues = column._valueAllocator(newCapacity)
-          ffi.copy(newValues, column._values, column._valueSize * column._size)
+        if column._valueType then
+          local newValues = column._valueType.arrayType(newCapacity)
+          ffi.copy(newValues, column._values, column._valueType.size * column._size)
 
           column._values = newValues
         end
