@@ -117,7 +117,7 @@ end
     error(message)
   else
     print(
-      "Arities: "
+      "Generated for-each function for arity "
         .. inputArity
         .. ", "
         .. optionalInputArity
@@ -154,12 +154,12 @@ function M:init(engine, config)
 end
 
 function M:sortColumns()
-  -- For required inputs, filter by smallest first
+  -- For required inputs, filter rows by smallest column first
   sort(self._sortedInputColumns, function(a, b)
     return a._size < b._size
   end)
 
-  -- For excluded inputs, filter by largest first
+  -- For excluded inputs, filter rows by largest column first
   sort(self._sortedExcludedInputColumns, function(a, b)
     return a._size > b._size
   end)
