@@ -1,6 +1,20 @@
 local ffi = require("ffi")
 local sparrow = require("sparrow")
 
+local insert = assert(table.insert)
+
+local function slice(t, i, j, result)
+  i = i or 1
+  j = j or #t
+  result = result or {}
+
+  for k = i, j do
+    insert(result, t[k])
+  end
+
+  return result
+end
+
 ffi.cdef([[
   typedef struct vec2 {
     float x, y;
@@ -32,11 +46,34 @@ function love.load()
 
   sparrow.newColumn(engine, "position", "vec2")
   sparrow.newColumn(engine, "velocity", "vec2")
+  sparrow.newColumn(engine, "acceleration", "vec2")
+
+  updatePositionQuery = sparrow.newQuery(
+    engine,
+    { "position", "velocity" },
+    {},
+    { "position" }
+  )
+
+  components = { "position", "velocity", "acceleration" }
+
+  for inputArity = 1, 3 do
+    for unputArity = 0, 3 do
+      for outputArity = 0, 3 do
+        sparrow.newQuery(
+          engine,
+          slice(components, 1, inputArity),
+          slice(components, 1, unputArity),
+          slice(components, 1, outputArity)
+        )
+      end
+    end
+  end
 end
 
 function love.update(dt)
   for i = 1, 100 do
-    if engine._nextEntity <= 1000000 then
+    if engine._nextEntity <= 100000 then
       local x = love.math.random() * 2 - 1
       local y = love.math.random() * 2 - 1
 
@@ -47,26 +84,18 @@ function love.update(dt)
     end
   end
 
-  local positions = engine:getColumn("position")
-  local velocities = engine:getColumn("velocity")
+  updatePositionQuery:forEach(function(position, velocity)
+    -- position = position + velocity * dt
 
-  for i = positions._size - 1, 0, -1 do
-    local entity = positions._entities[i]
-    local position = positions._values[i]
+    position.x = position.x + velocity.x * dt
+    position.y = position.y + velocity.y * dt
 
-    if velocities[entity] then
-      local velocity = velocities[entity]
-
-      -- position = position + velocity * dt
-
-      position.x = position.x + velocity.x * dt
-      position.y = position.y + velocity.y * dt
-
-      positions[entity] = position
-    end
-  end
+    return position
+  end)
 end
 
 function love.draw()
-  love.graphics.print(love.timer.getFPS() .. " FPS, " .. (engine._nextEntity - 1) .. " entities")
+  love.graphics.print(
+    love.timer.getFPS() .. " FPS, " .. (engine._nextEntity - 1) .. " entities"
+  )
 end

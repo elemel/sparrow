@@ -21,7 +21,9 @@ function M.new(engine, component, valueType)
 
   column._indices = {}
   column._entities = engine._entityType.arrayType(column._capacity)
-  column._values = column._valueType and column._valueType.arrayType(column._capacity) or {}
+  column._values = column._valueType
+      and column._valueType.arrayType(column._capacity)
+    or {}
 
   engine._columns[component] = column
   return setmetatable(column, M)
@@ -56,14 +58,27 @@ function M.__newindex(column, entity, value)
     if value ~= nil then
       if column._size == column._capacity then
         local newCapacity = column._capacity * 2
-        print("Reallocating column " .. column._component .. " to capacity " .. newCapacity)
+        print(
+          "Reallocating column "
+            .. column._component
+            .. " to capacity "
+            .. newCapacity
+        )
 
         local newEntities = column._engine._entityType.arrayType(newCapacity)
-        ffi.copy(newEntities, column._entities, column._engine._entityType.size * column._size)
+        ffi.copy(
+          newEntities,
+          column._entities,
+          column._engine._entityType.size * column._size
+        )
 
         if column._valueType then
           local newValues = column._valueType.arrayType(newCapacity)
-          ffi.copy(newValues, column._values, column._valueType.size * column._size)
+          ffi.copy(
+            newValues,
+            column._values,
+            column._valueType.size * column._size
+          )
 
           column._values = newValues
         end
