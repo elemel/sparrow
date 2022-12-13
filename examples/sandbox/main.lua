@@ -73,7 +73,7 @@ end
 
 function love.update(dt)
   for i = 1, 100 do
-    if database._nextEntity <= 100000 then
+    if database:getRowCount() < 100000 then
       local x = love.math.random() * 2 - 1
       local y = love.math.random() * 2 - 1
 
@@ -96,6 +96,6 @@ end
 
 function love.draw()
   love.graphics.print(
-    love.timer.getFPS() .. " FPS, " .. (database._nextEntity - 1) .. " entities"
+    love.timer.getFPS() .. " FPS, " .. database:getRowCount() .. " rows"
   )
 end

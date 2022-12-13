@@ -6,6 +6,7 @@ local M = Class.new()
 function M:init()
   self._columns = {}
   self._rows = {}
+  self._rowCount = 0
 
   self._entityType = DataType.new("double")
   self._nextEntity = 1
@@ -22,6 +23,10 @@ end
 
 function M:getRow(entity)
   return self._rows[entity]
+end
+
+function M:getRowCount()
+  return self._rowCount
 end
 
 return M

@@ -13,6 +13,7 @@ function M.new(database, cells)
 
   setmetatable(row, M)
   database._rows[entity] = row
+  database._rowCount = database._rowCount + 1
 
   if cells then
     for component, value in pairs(cells) do
