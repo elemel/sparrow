@@ -85,21 +85,16 @@ local function generateEachRowFunction(
     insert(buffer, " = ")
   end
 
-  insert(buffer, "system(")
+  insert(buffer, "system(entity")
 
   for i = 1, inputArity do
-    if i >= 2 then
-      insert(buffer, ",")
-    end
-
-    insert(buffer, "\n          query._inputColumns[")
+    insert(buffer, ",\n          query._inputColumns[")
     insert(buffer, i)
     insert(buffer, "][entity]")
   end
 
   for i = 1, optionalInputArity do
-    insert(buffer, ",")
-    insert(buffer, "\n          query._optionalInputColumns[")
+    insert(buffer, ",\n          query._optionalInputColumns[")
     insert(buffer, i)
     insert(buffer, "][entity]")
   end

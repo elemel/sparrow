@@ -84,7 +84,7 @@ function love.update(dt)
     end
   end
 
-  updatePositionQuery:eachRow(function(position, velocity)
+  updatePositionQuery:eachRow(function(entity, position, velocity)
     -- position = position + velocity * dt
 
     position.x = position.x + velocity.x * dt
