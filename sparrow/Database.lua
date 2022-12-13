@@ -29,4 +29,17 @@ function M:getRowCount()
   return self._rowCount
 end
 
+function M:deleteRow(entity)
+  if not self._rows[entity] then
+    error("No such row: " .. entity)
+  end
+
+  for _, column in pairs(self._columns) do
+    column[entity] = nil
+  end
+
+  self._rows[entity] = nil
+  self._rowCount = self._rowCount - 1
+end
+
 return M
