@@ -48,27 +48,27 @@ function love.load()
   sparrow.newColumn(engine, "velocity", "vec2")
   sparrow.newColumn(engine, "acceleration", "vec2")
 
-  updatePositionQuery = sparrow.newQuery(
-    engine,
-    { "position", "velocity" },
-    {},
-    { "position" }
-  )
+  updatePositionQuery = sparrow.newQuery(engine, {
+    inputs = { "position", "velocity" },
+    outputs = { "position" },
+  })
 
-  components = { "position", "velocity", "acceleration" }
+  -- components = { "position", "velocity", "acceleration" }
 
-  for inputArity = 1, 3 do
-    for unputArity = 0, 3 do
-      for outputArity = 0, 3 do
-        sparrow.newQuery(
-          engine,
-          slice(components, 1, inputArity),
-          slice(components, 1, unputArity),
-          slice(components, 1, outputArity)
-        )
-      end
-    end
-  end
+  -- for inputArity = 1, 3 do
+  --   for optionalInputArity = 0, 3 do
+  --     for excludedInputArity = 0, 3 do
+  --       for outputArity = 0, 3 do
+  --         sparrow.newQuery(engine, {
+  --           inputs = slice(components, 1, inputArity),
+  --           optionalInputs = slice(components, 1, optionalInputArity),
+  --           excludedInputs = slice(components, 1, excludedInputArity),
+  --           outputs = slice(components, 1, outputArity),
+  --         })
+  --       end
+  --     end
+  --   end
+  -- end
 end
 
 function love.update(dt)
@@ -84,7 +84,7 @@ function love.update(dt)
     end
   end
 
-  updatePositionQuery:forEach(function(position, velocity)
+  updatePositionQuery:eachRow(function(position, velocity)
     -- position = position + velocity * dt
 
     position.x = position.x + velocity.x * dt

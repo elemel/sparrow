@@ -25,7 +25,12 @@ local function getColumns(engine, components)
   return columns
 end
 
-local function generateEachRowFunction(inputArity, unputArity, outputArity)
+local function generateEachRowFunction(
+  inputArity,
+  optionalInputArity,
+  excludedInputArity,
+  outputArity
+)
   assert(inputArity >= 1, "Not implemented")
 
   buffer = {}
@@ -40,7 +45,7 @@ local function generateEachRowFunction(inputArity, unputArity, outputArity)
     if ]]
   )
 
-  if inputArity == 1 and unputArity == 0 then
+  if inputArity == 1 and excludedInputArity == 0 then
     insert(buffer, "true")
   else
     for i = 2, inputArity do
@@ -53,19 +58,18 @@ local function generateEachRowFunction(inputArity, unputArity, outputArity)
       insert(buffer, "]._indices[entity]")
     end
 
-    for i = 1, unputArity do
+    for i = 1, excludedInputArity do
       if inputArity >= 2 or i >= 2 then
         insert(buffer, " and\n        ")
       end
 
-      insert(buffer, "not query._sortedUnputColumns[")
+      insert(buffer, "not query._sortedExcludedInputColumns[")
       insert(buffer, i)
       insert(buffer, "]._indices[entity]")
     end
   end
 
-  insert(buffer, " then\n")
-  insert(buffer, "      ")
+  insert(buffer, " then\n      ")
 
   if outputArity >= 1 then
     for i = 1, outputArity do
@@ -93,6 +97,13 @@ local function generateEachRowFunction(inputArity, unputArity, outputArity)
     insert(buffer, "][entity]")
   end
 
+  for i = 1, optionalInputArity do
+    insert(buffer, ",")
+    insert(buffer, "\n          query._optionalInputColumns[")
+    insert(buffer, i)
+    insert(buffer, "][entity]")
+  end
+
   insert(
     buffer,
     [[)
@@ -111,7 +122,14 @@ end
     error(message)
   else
     print(
-      "Arities: " .. inputArity .. ", " .. outputArity .. ", " .. unputArity
+      "Arities: "
+        .. inputArity
+        .. ", "
+        .. optionalInputArity
+        .. ", "
+        .. excludedInputArity
+        .. ", "
+        .. outputArity
     )
     print()
     print(code)
@@ -120,29 +138,34 @@ end
   return f()
 end
 
-function M:init(engine, inputs, unputs, outputs)
+function M:init(engine, config)
+  config = config or {}
   self._engine = assert(engine)
 
-  self._inputColumns = getColumns(engine, inputs or {})
-  self._unputColumns = getColumns(engine, unputs or {})
-  self._outputColumns = getColumns(engine, outputs or {})
+  self._inputColumns = getColumns(engine, config.inputs or {})
+  self._optionalInputColumns = getColumns(engine, config.optionalInputs or {})
+  self._excludedInputColumns = getColumns(engine, config.excludedInputs or {})
+  self._outputColumns = getColumns(engine, config.outputs or {})
 
   self._sortedInputColumns = values(self._inputColumns)
-  self._sortedUnputColumns = values(self._unputColumns)
+  self._sortedExcludedInputColumns = values(self._excludedInputColumns)
 
-  self.forEach = generateEachRowFunction(
+  self.eachRow = generateEachRowFunction(
     #self._inputColumns,
-    #self._unputColumns,
+    #self._optionalInputColumns,
+    #self._excludedInputColumns,
     #self._outputColumns
   )
 end
 
 function M:sortColumns()
+  -- For required inputs, filter by smallest first
   sort(self._sortedInputColumns, function(a, b)
     return a._size < b._size
   end)
 
-  sort(self._sortedUnputColumns, function(a, b)
+  -- For excluded inputs, filter by largest first
+  sort(self._sortedExcludedInputColumns, function(a, b)
     return a._size > b._size
   end)
 end
