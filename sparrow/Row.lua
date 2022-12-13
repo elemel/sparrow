@@ -4,15 +4,15 @@ local copy = assert(tableMod.copy)
 
 local M = {}
 
-function M.new(engine, cells)
+function M.new(database, cells)
   local row = {}
 
-  row._engine = assert(engine)
-  local entity = engine:generateEntity()
+  row._database = assert(database)
+  local entity = database:generateEntity()
   row._entity = entity
 
   setmetatable(row, M)
-  engine._rows[entity] = row
+  database._rows[entity] = row
 
   if cells then
     for component, value in pairs(cells) do
@@ -24,12 +24,12 @@ function M.new(engine, cells)
 end
 
 function M.__index(row, component)
-  local column = row._engine._columns[component]
+  local column = row._database._columns[component]
   return column and column[row._entity]
 end
 
 function M.__newindex(row, component, value)
-  local column = row._engine._columns[component]
+  local column = row._database._columns[component]
 
   if not column then
     error("No such column: " .. component)

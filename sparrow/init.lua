@@ -1,12 +1,12 @@
 local Column = require("sparrow.Column")
-local Engine = require("sparrow.Engine")
+local Database = require("sparrow.Database")
 local Query = require("sparrow.Query")
 local Row = require("sparrow.Row")
 
 local M = {}
 
 M.newColumn = Column.new
-M.newEngine = Engine.new
+M.newDatabase = Database.new
 M.newQuery = Query.new
 M.newRow = Row.new
 

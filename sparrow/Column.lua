@@ -3,14 +3,14 @@ local ffi = require("ffi")
 
 local M = {}
 
-function M.new(engine, component, valueType)
-  if engine._columns[component] then
+function M.new(database, component, valueType)
+  if database._columns[component] then
     error("Duplicate column: " .. component)
   end
 
   local column = {}
 
-  column._engine = assert(engine)
+  column._database = assert(database)
   column._component = assert(component)
 
   column._valueType = valueType and DataType.new(valueType)
@@ -20,12 +20,12 @@ function M.new(engine, component, valueType)
   column._capacity = 2
 
   column._indices = {}
-  column._entities = engine._entityType.arrayType(column._capacity)
+  column._entities = database._entityType.arrayType(column._capacity)
   column._values = column._valueType
       and column._valueType.arrayType(column._capacity)
     or {}
 
-  engine._columns[component] = column
+  database._columns[component] = column
   return setmetatable(column, M)
 end
 
@@ -65,11 +65,11 @@ function M.__newindex(column, entity, value)
             .. newCapacity
         )
 
-        local newEntities = column._engine._entityType.arrayType(newCapacity)
+        local newEntities = column._database._entityType.arrayType(newCapacity)
         ffi.copy(
           newEntities,
           column._entities,
-          column._engine._entityType.size * column._size
+          column._database._entityType.size * column._size
         )
 
         if column._valueType then

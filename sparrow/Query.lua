@@ -9,11 +9,11 @@ local values = assert(tableMod.values)
 
 local M = Class.new()
 
-local function getColumns(engine, components)
+local function getColumns(database, components)
   local columns = {}
 
   for i, component in ipairs(components) do
-    local column = engine._columns[component]
+    local column = database._columns[component]
 
     if not column then
       error("No such column: " .. component)
@@ -133,14 +133,14 @@ end
   return f()
 end
 
-function M:init(engine, config)
+function M:init(database, config)
   config = config or {}
-  self._engine = assert(engine)
+  self._database = assert(database)
 
-  self._inputColumns = getColumns(engine, config.inputs or {})
-  self._optionalInputColumns = getColumns(engine, config.optionalInputs or {})
-  self._excludedInputColumns = getColumns(engine, config.excludedInputs or {})
-  self._outputColumns = getColumns(engine, config.outputs or {})
+  self._inputColumns = getColumns(database, config.inputs or {})
+  self._optionalInputColumns = getColumns(database, config.optionalInputs or {})
+  self._excludedInputColumns = getColumns(database, config.excludedInputs or {})
+  self._outputColumns = getColumns(database, config.outputs or {})
 
   self._sortedInputColumns = values(self._inputColumns)
   self._sortedExcludedInputColumns = values(self._excludedInputColumns)

@@ -42,13 +42,13 @@ end
 ffi.metatype("vec2", vec2Mt)
 
 function love.load()
-  engine = sparrow.newEngine()
+  database = sparrow.newDatabase()
 
-  sparrow.newColumn(engine, "position", "vec2")
-  sparrow.newColumn(engine, "velocity", "vec2")
-  sparrow.newColumn(engine, "acceleration", "vec2")
+  sparrow.newColumn(database, "position", "vec2")
+  sparrow.newColumn(database, "velocity", "vec2")
+  sparrow.newColumn(database, "acceleration", "vec2")
 
-  updatePositionQuery = sparrow.newQuery(engine, {
+  updatePositionQuery = sparrow.newQuery(database, {
     inputs = { "position", "velocity" },
     outputs = { "position" },
   })
@@ -59,7 +59,7 @@ function love.load()
   --   for optionalInputArity = 0, 3 do
   --     for excludedInputArity = 0, 3 do
   --       for outputArity = 0, 3 do
-  --         sparrow.newQuery(engine, {
+  --         sparrow.newQuery(database, {
   --           inputs = slice(components, 1, inputArity),
   --           optionalInputs = slice(components, 1, optionalInputArity),
   --           excludedInputs = slice(components, 1, excludedInputArity),
@@ -73,14 +73,14 @@ end
 
 function love.update(dt)
   for i = 1, 100 do
-    if engine._nextEntity <= 100000 then
+    if database._nextEntity <= 100000 then
       local x = love.math.random() * 2 - 1
       local y = love.math.random() * 2 - 1
 
       local dx = love.math.random() * 2 - 1
       local dy = love.math.random() * 2 - 1
 
-      sparrow.newRow(engine, { position = { x, y }, velocity = { dx, dy } })
+      sparrow.newRow(database, { position = { x, y }, velocity = { dx, dy } })
     end
   end
 
@@ -96,6 +96,6 @@ end
 
 function love.draw()
   love.graphics.print(
-    love.timer.getFPS() .. " FPS, " .. (engine._nextEntity - 1) .. " entities"
+    love.timer.getFPS() .. " FPS, " .. (database._nextEntity - 1) .. " entities"
   )
 end
