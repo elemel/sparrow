@@ -5,6 +5,8 @@ local M = Class.new()
 
 function M:init()
   self._columns = {}
+  self._version = 1
+
   self._rows = {}
   self._rowCount = 0
 
@@ -40,6 +42,14 @@ function M:deleteRow(entity)
 
   self._rows[entity] = nil
   self._rowCount = self._rowCount - 1
+end
+
+function M:deleteColumn(component)
+  if not self._columns[component] then
+    error("No such column: " .. component)
+  end
+
+  self._columns[component] = nil
 end
 
 return M

@@ -37,7 +37,7 @@ local function generateEachRowFunction(
   insert(
     buffer,
     [[return function(query, system)
-  query:sortColumns()
+  query:prepare()
 
   for i = query._sortedInputColumns[1]._size - 1, 0, -1 do
     local entity = query._sortedInputColumns[1]._entities[i]
@@ -136,24 +136,32 @@ end
 function M:init(database, config)
   config = config or {}
   self._database = assert(database)
+  self._config = copy(config)
 
-  self._inputColumns = getColumns(database, config.inputs or {})
-  self._optionalInputColumns = getColumns(database, config.optionalInputs or {})
-  self._excludedInputColumns = getColumns(database, config.excludedInputs or {})
-  self._outputColumns = getColumns(database, config.outputs or {})
-
-  self._sortedInputColumns = values(self._inputColumns)
-  self._sortedExcludedInputColumns = values(self._excludedInputColumns)
+  self._databaseVersion = 0
+  assert(self._databaseVersion ~= self._database._version)
 
   self.eachRow = generateEachRowFunction(
-    #self._inputColumns,
-    #self._optionalInputColumns,
-    #self._excludedInputColumns,
-    #self._outputColumns
+    self._config.inputs and #self._config.inputs or 0,
+    self._config.optionalInputs and #self._config.optionalInputs or 0,
+    self._config.excludedInputs and #self._config.excludedInputs or 0,
+    self._config.outputs and #self._config.outputs or 0
   )
 end
 
-function M:sortColumns()
+function M:prepare()
+  if self._databaseVersion ~= self._database._version then
+    self._inputColumns = getColumns(database, self._config.inputs or {})
+    self._optionalInputColumns = getColumns(database, self._config.optionalInputs or {})
+    self._excludedInputColumns = getColumns(database, self._config.excludedInputs or {})
+    self._outputColumns = getColumns(database, self._config.outputs or {})
+
+    self._sortedInputColumns = values(self._inputColumns)
+    self._sortedExcludedInputColumns = values(self._excludedInputColumns)
+
+    self._databaseVersion = self._database._version
+  end
+
   -- For required inputs, filter rows by smallest column first
   sort(self._sortedInputColumns, function(a, b)
     return a._size < b._size
