@@ -134,9 +134,8 @@ end
 end
 
 function M:init(database, config)
-  config = config or {}
   self._database = assert(database)
-  self._config = copy(config)
+  self._config = copy(config or {})
 
   self._databaseVersion = 0
   assert(self._databaseVersion ~= self._database._version)
