@@ -146,13 +146,17 @@ function M:init(database, config)
     self._config.excludedInputs and #self._config.excludedInputs or 0,
     self._config.outputs and #self._config.outputs or 0
   )
+
+  self:prepare()
 end
 
 function M:prepare()
   if self._databaseVersion ~= self._database._version then
     self._inputColumns = getColumns(database, self._config.inputs or {})
-    self._optionalInputColumns = getColumns(database, self._config.optionalInputs or {})
-    self._excludedInputColumns = getColumns(database, self._config.excludedInputs or {})
+    self._optionalInputColumns =
+      getColumns(database, self._config.optionalInputs or {})
+    self._excludedInputColumns =
+      getColumns(database, self._config.excludedInputs or {})
     self._outputColumns = getColumns(database, self._config.outputs or {})
 
     self._sortedInputColumns = values(self._inputColumns)
