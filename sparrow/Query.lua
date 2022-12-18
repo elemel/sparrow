@@ -152,6 +152,8 @@ end
 
 function M:prepare()
   if self._databaseVersion ~= self._database._version then
+    print("Binding query to database version " .. self._database._version)
+
     self._inputColumns = getColumns(database, self._config.inputs or {})
     self._optionalInputColumns =
       getColumns(database, self._config.optionalInputs or {})
