@@ -31,6 +31,10 @@ function M:getRowCount()
   return self._rowCount
 end
 
+function M:getVersion()
+  return self._version
+end
+
 function M:deleteRow(entity)
   if not self._rows[entity] then
     error("No such row: " .. entity)
@@ -50,6 +54,7 @@ function M:deleteColumn(component)
   end
 
   self._columns[component] = nil
+  self._version = self._version + 1
 end
 
 return M

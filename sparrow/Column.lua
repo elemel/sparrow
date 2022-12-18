@@ -26,6 +26,8 @@ function M.new(database, component, valueType)
     or {}
 
   database._columns[component] = column
+  database._version = database._version + 1
+
   return setmetatable(column, M)
 end
 
