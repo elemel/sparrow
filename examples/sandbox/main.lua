@@ -41,6 +41,9 @@ end
 
 ffi.metatype("vec2", vec2Mt)
 
+local database
+local updatePositionQuery
+
 function love.load()
   database = sparrow.newDatabase()
 
