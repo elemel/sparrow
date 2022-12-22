@@ -1,43 +1,43 @@
-local tableMod = require("sparrow.table")
+local Class = require("sparrow.Class")
 
-local copy = assert(tableMod.copy)
+local M = Class.new()
 
-local M = {}
+function M:init(database, cells)
+  self._database = assert(database)
+  self._entity = database:generateEntity()
 
-function M.new(database, cells)
-  local row = {}
-
-  row._database = assert(database)
-  local entity = database:generateEntity()
-  row._entity = entity
-
-  setmetatable(row, M)
-  database._rows[entity] = row
-  database._rowCount = database._rowCount + 1
+  database._rows[self._entity] = self
+  database._rowCount = self._database._rowCount + 1
 
   if cells then
     for component, value in pairs(cells) do
-      row[component] = value
+      self:setValue(component, value)
     end
   end
-
-  return row
 end
 
-function M.__index(row, component)
-  local column = row._database._columns[component]
-  return column and column[row._entity]
+function M:getDatabase()
+  return self._database
 end
 
-function M.__newindex(row, component, value)
-  local column = row._database._columns[component]
+function M:getEntity()
+  return self._entity
+end
+
+function M:getValue(component)
+  local column = self._database._columns[component]
+  return column and column:getValue(self._entity)
+end
+
+function M:setValue(component, value)
+  local column = self._database._columns[component]
 
   if not column then
     error("No such column: " .. component)
     return
   end
 
-  column[row._entity] = value
+  column:setValue(self._entity, value)
 end
 
 return M

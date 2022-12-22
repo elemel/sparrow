@@ -74,14 +74,15 @@ local function generateForEachFunction(
   insert(buffer, " then\n      ")
 
   if outputArity >= 1 then
+    insert(buffer, "local ")
+
     for i = 1, outputArity do
       if i >= 2 then
         insert(buffer, ",\n        ")
       end
 
-      insert(buffer, "query._outputColumns[")
+      insert(buffer, "output")
       insert(buffer, i)
-      insert(buffer, "][entity]")
     end
 
     insert(buffer, " = ")
@@ -92,18 +93,30 @@ local function generateForEachFunction(
   for i = 1, inputArity do
     insert(buffer, ",\n          query._inputColumns[")
     insert(buffer, i)
-    insert(buffer, "][entity]")
+    insert(buffer, "]:getValue(entity)")
   end
 
   for i = 1, optionalInputArity do
     insert(buffer, ",\n          query._optionalInputColumns[")
     insert(buffer, i)
-    insert(buffer, "][entity]")
+    insert(buffer, "]:getValue(entity)")
+  end
+
+  insert(buffer, ")\n")
+
+  if outputArity >= 1 then
+    for i = 1, outputArity do
+      insert(buffer, "      query._outputColumns[")
+      insert(buffer, i)
+      insert(buffer, "]:setValue(output")
+      insert(buffer, i)
+      insert(buffer, ")\n")
+    end
   end
 
   insert(
     buffer,
-    [[)
+    [[
     end
   end
 end
