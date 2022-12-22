@@ -1,3 +1,4 @@
+local Class = require("sparrow.Class")
 local DataType = require("sparrow.DataType")
 local ffi = require("ffi")
 local logMod = require("sparrow.log")
@@ -5,112 +6,108 @@ local logMod = require("sparrow.log")
 local isLogged = assert(logMod.isLogged)
 local log = assert(logMod.log)
 
-local M = {}
+local M = Class.new()
 
-function M.new(database, component, valueType)
-  if database._columns[component] then
-    error("Duplicate column: " .. component)
+function M:init(database, component, valueType)
+  self._database = assert(database)
+  self._component = assert(component)
+
+  if self._database._columns[self._component] then
+    error("Duplicate column: " .. self._component)
   end
 
-  local column = {}
+  self._valueType = valueType and DataType.new(valueType)
+  self._defaultValue = self._valueType and self._valueType.type()
 
-  column._database = assert(database)
-  column._component = assert(component)
+  self._size = 0
+  self._capacity = 2
 
-  column._valueType = valueType and DataType.new(valueType)
-  column._defaultValue = column._valueType and column._valueType.type()
-
-  column._size = 0
-  column._capacity = 2
-
-  column._indices = {}
-  column._entities = database._entityType.arrayType(column._capacity)
-  column._values = column._valueType
-      and column._valueType.arrayType(column._capacity)
+  self._indices = {}
+  self._entities = database._entityType.arrayType(self._capacity)
+  self._values = self._valueType
+      and self._valueType.arrayType(self._capacity)
     or {}
 
-  database._columns[component] = column
+  database._columns[component] = self
   database._version = database._version + 1
-
-  return setmetatable(column, M)
 end
 
-function M.__index(column, entity)
-  local index = column._indices[entity]
-  return index and column._values[index]
+function M:getValue(entity)
+  local index = self._indices[entity]
+  return index and self._values[index]
 end
 
-function M.__newindex(column, entity, value)
-  local index = column._indices[entity]
+function M:setValue(entity, value)
+  local index = self._indices[entity]
 
   if index then
     if value ~= nil then
-      column._values[index] = value
+      self._values[index] = value
     else
       if isLogged("debug") then
         log(
           "debug",
-          "Removing row " .. entity .. " from column " .. column._component
+          "Removing row " .. entity .. " from column " .. self._component
         )
       end
 
-      column._size = column._size - 1
-      local lastEntity = column._entities[column._size]
+      self._size = self._size - 1
+      local lastEntity = self._entities[self._size]
 
-      column._indices[lastEntity] = index
-      column._entities[index] = lastEntity
-      column._values[index] = column._values[column._size]
+      self._indices[lastEntity] = index
+      self._entities[index] = lastEntity
+      self._values[index] = self._values[self._size]
 
-      column._indices[entity] = nil
-      column._entities[column._size] = 0
-      column._values[column._size] = column._defaultValue
+      self._indices[entity] = nil
+      self._entities[self._size] = 0
+      self._values[self._size] = self._defaultValue
     end
   else
     if value ~= nil then
-      if column._size == column._capacity then
-        local newCapacity = column._capacity * 2
+      if self._size == self._capacity then
+        local newCapacity = self._capacity * 2
 
         log(
           "info",
           "Reallocating "
-            .. column._component
+            .. self._component
             .. " column to capacity "
             .. newCapacity
         )
 
-        local newEntities = column._database._entityType.arrayType(newCapacity)
+        local newEntities = self._database._entityType.arrayType(newCapacity)
         ffi.copy(
           newEntities,
-          column._entities,
-          column._database._entityType.size * column._size
+          self._entities,
+          self._database._entityType.size * self._size
         )
 
-        if column._valueType then
-          local newValues = column._valueType.arrayType(newCapacity)
+        if self._valueType then
+          local newValues = self._valueType.arrayType(newCapacity)
           ffi.copy(
             newValues,
-            column._values,
-            column._valueType.size * column._size
+            self._values,
+            self._valueType.size * self._size
           )
 
-          column._values = newValues
+          self._values = newValues
         end
 
-        column._entities = newEntities
-        column._capacity = newCapacity
+        self._entities = newEntities
+        self._capacity = newCapacity
       end
 
       if isLogged("debug") then
         log(
           "debug",
-          "Adding row " .. entity .. " to column " .. column._component
+          "Adding row " .. entity .. " to " .. self._component .. " column"
         )
       end
 
-      column._indices[entity] = column._size
-      column._entities[column._size] = entity
-      column._values[column._size] = value
-      column._size = column._size + 1
+      self._indices[entity] = self._size
+      self._entities[self._size] = entity
+      self._values[self._size] = value
+      self._size = self._size + 1
     end
   end
 end
