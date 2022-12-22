@@ -1,5 +1,9 @@
 local DataType = require("sparrow.DataType")
 local ffi = require("ffi")
+local logMod = require("sparrow.log")
+
+local isLogged = assert(logMod.isLogged)
+local log = assert(logMod.log)
 
 local M = {}
 
@@ -43,7 +47,12 @@ function M.__newindex(column, entity, value)
     if value ~= nil then
       column._values[index] = value
     else
-      -- print("Removing row " .. entity .. " from column " .. column._component)
+      if isLogged("debug") then
+        log(
+          "debug",
+          "Removing row " .. entity .. " from column " .. column._component
+        )
+      end
 
       column._size = column._size - 1
       local lastEntity = column._entities[column._size]
@@ -60,10 +69,12 @@ function M.__newindex(column, entity, value)
     if value ~= nil then
       if column._size == column._capacity then
         local newCapacity = column._capacity * 2
-        print(
-          "Reallocating column "
+
+        log(
+          "info",
+          "Reallocating "
             .. column._component
-            .. " to capacity "
+            .. " column to capacity "
             .. newCapacity
         )
 
@@ -89,7 +100,13 @@ function M.__newindex(column, entity, value)
         column._capacity = newCapacity
       end
 
-      -- print("Adding row " .. entity .. " to column " .. column._component)
+      if isLogged("debug") then
+        log(
+          "debug",
+          "Adding row " .. entity .. " to column " .. column._component
+        )
+      end
+
       column._indices[entity] = column._size
       column._entities[column._size] = entity
       column._values[column._size] = value
