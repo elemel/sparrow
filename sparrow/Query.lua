@@ -108,7 +108,7 @@ local function generateForEachFunction(
     for i = 1, outputArity do
       insert(buffer, "      query._outputColumns[")
       insert(buffer, i)
-      insert(buffer, "]:setValue(output")
+      insert(buffer, "]:setValue(entity, output")
       insert(buffer, i)
       insert(buffer, ")\n")
     end
