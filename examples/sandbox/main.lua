@@ -45,6 +45,7 @@ local database
 local updatePositionQuery
 
 function love.load()
+  sparrow.setLogger(print)
   database = sparrow.newDatabase()
 
   sparrow.newColumn(database, "position", "vec2")
@@ -87,7 +88,7 @@ function love.update(dt)
     end
   end
 
-  updatePositionQuery:eachRow(function(entity, position, velocity)
+  updatePositionQuery:forEach(function(entity, position, velocity)
     -- position = position + velocity * dt
 
     position.x = position.x + velocity.x * dt

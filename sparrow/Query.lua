@@ -1,9 +1,11 @@
 local Class = require("sparrow.Class")
+local logMod = require("sparrow.log")
 local tableMod = require("sparrow.table")
 
 local concat = assert(table.concat)
 local copy = assert(tableMod.copy)
 local insert = assert(table.insert)
+local log = assert(logMod.log)
 local sort = assert(table.sort)
 local values = assert(tableMod.values)
 
@@ -25,7 +27,7 @@ local function getColumns(database, components)
   return columns
 end
 
-local function generateEachRowFunction(
+local function generateForEachFunction(
   inputArity,
   optionalInputArity,
   excludedInputArity,
@@ -112,12 +114,11 @@ end
   local f, message = load(code)
 
   if message then
-    print()
-    print(code)
-    error(message)
+    log("error", message .. "\n\n" .. code)
   else
-    print(
-      "Generated for-each function for arity "
+    log(
+      "info",
+      "Generated for-each function with arity "
         .. inputArity
         .. ", "
         .. optionalInputArity
@@ -125,9 +126,9 @@ end
         .. excludedInputArity
         .. ", "
         .. outputArity
+        .. "\n\n"
+        .. code
     )
-    print()
-    print(code)
   end
 
   return f()
@@ -140,7 +141,7 @@ function M:init(database, config)
   self._databaseVersion = 0
   assert(self._databaseVersion ~= self._database._version)
 
-  self.eachRow = generateEachRowFunction(
+  self.forEach = generateForEachFunction(
     self._config.inputs and #self._config.inputs or 0,
     self._config.optionalInputs and #self._config.optionalInputs or 0,
     self._config.excludedInputs and #self._config.excludedInputs or 0,
@@ -152,7 +153,7 @@ end
 
 function M:prepare()
   if self._databaseVersion ~= self._database._version then
-    print("Binding query to database version " .. self._database._version)
+    log("info", "Binding query to database version " .. self._database._version)
 
     self._inputColumns = getColumns(self._database, self._config.inputs or {})
     self._optionalInputColumns =
