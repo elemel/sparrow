@@ -1,10 +1,6 @@
 local Class = require("sparrow.Class")
 local DataType = require("sparrow.DataType")
 local ffi = require("ffi")
-local logMod = require("sparrow.log")
-
-local isLogged = assert(logMod.isLogged)
-local log = assert(logMod.log)
 
 local M = Class.new()
 
@@ -16,41 +12,66 @@ function M:init(database, component, valueType)
     error("Duplicate column: " .. self._component)
   end
 
-  self._valueType = valueType and DataType.new(valueType)
-  self._defaultValue = self._valueType and self._valueType.type()
+  self._valueType = valueType
+  self._dataType = self._valueType and DataType.new(self._valueType)
+  self._defaultValue = self._dataType and self._dataType.type()
 
   self._size = 0
   self._capacity = 2
 
   self._indices = {}
   self._entities = database._entityType.arrayType(self._capacity)
-  self._values = self._valueType
-      and self._valueType.arrayType(self._capacity)
+  self._values = self._dataType and self._dataType.arrayType(self._capacity)
     or {}
 
   database._columns[component] = self
   database._version = database._version + 1
 end
 
-function M:getValue(entity)
+function M:delete()
+  self._database:deleteColumn(self._component)
+end
+
+function M:getDatabase()
+  return self._database
+end
+
+function M:getComponent()
+  return self._component
+end
+
+function M:getValueType()
+  return self._valueType
+end
+
+function M:getSize()
+  return self._size
+end
+
+function M:getCapacity()
+  return self._capacity
+end
+
+function M:getIndex(entity)
+  return self._indices[entity]
+end
+
+function M:getEntity(index)
+  return self._entities[index]
+end
+
+function M:getCell(entity)
   local index = self._indices[entity]
   return index and self._values[index]
 end
 
-function M:setValue(entity, value)
+function M:setCell(entity, value)
   local index = self._indices[entity]
 
   if index then
     if value ~= nil then
       self._values[index] = value
     else
-      if isLogged("debug") then
-        log(
-          "debug",
-          "Removing row " .. entity .. " from column " .. self._component
-        )
-      end
-
       self._size = self._size - 1
       local lastEntity = self._entities[self._size]
 
@@ -67,14 +88,6 @@ function M:setValue(entity, value)
       if self._size == self._capacity then
         local newCapacity = self._capacity * 2
 
-        log(
-          "info",
-          "Reallocating "
-            .. self._component
-            .. " column to capacity "
-            .. newCapacity
-        )
-
         local newEntities = self._database._entityType.arrayType(newCapacity)
         ffi.copy(
           newEntities,
@@ -82,26 +95,15 @@ function M:setValue(entity, value)
           self._database._entityType.size * self._size
         )
 
-        if self._valueType then
-          local newValues = self._valueType.arrayType(newCapacity)
-          ffi.copy(
-            newValues,
-            self._values,
-            self._valueType.size * self._size
-          )
+        if self._dataType then
+          local newValues = self._dataType.arrayType(newCapacity)
+          ffi.copy(newValues, self._values, self._dataType.size * self._size)
 
           self._values = newValues
         end
 
         self._entities = newEntities
         self._capacity = newCapacity
-      end
-
-      if isLogged("debug") then
-        log(
-          "debug",
-          "Adding row " .. entity .. " to " .. self._component .. " column"
-        )
       end
 
       self._indices[entity] = self._size

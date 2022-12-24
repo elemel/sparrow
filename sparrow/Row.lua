@@ -11,9 +11,13 @@ function M:init(database, cells)
 
   if cells then
     for component, value in pairs(cells) do
-      self:setValue(component, value)
+      self:setCell(component, value)
     end
   end
+end
+
+function M:delete()
+  self._database:deleteRow(self._entity)
 end
 
 function M:getDatabase()
@@ -24,20 +28,19 @@ function M:getEntity()
   return self._entity
 end
 
-function M:getValue(component)
+function M:getCell(component)
   local column = self._database._columns[component]
-  return column and column:getValue(self._entity)
+  return column and column:getCell(self._entity)
 end
 
-function M:setValue(component, value)
+function M:setCell(component, value)
   local column = self._database._columns[component]
 
   if not column then
     error("No such column: " .. component)
-    return
   end
 
-  column:setValue(self._entity, value)
+  column:setCell(self._entity, value)
 end
 
 return M
