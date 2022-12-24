@@ -41,7 +41,7 @@ function M:deleteRow(entity)
   end
 
   for _, column in pairs(self._columns) do
-    column[entity] = nil
+    column:setCell(entity, nil)
   end
 
   self._rows[entity] = nil

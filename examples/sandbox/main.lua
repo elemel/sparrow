@@ -45,7 +45,6 @@ local database
 local updatePositionQuery
 
 function love.load()
-  sparrow.setLogger(print)
   database = sparrow.newDatabase()
 
   sparrow.newColumn(database, "position", "vec2")
@@ -59,16 +58,19 @@ function love.load()
 
   -- components = { "position", "velocity", "acceleration" }
 
-  -- for inputArity = 1, 3 do
-  --   for optionalInputArity = 0, 3 do
-  --     for excludedInputArity = 0, 3 do
-  --       for outputArity = 0, 3 do
-  --         sparrow.newQuery(database, {
-  --           inputs = slice(components, 1, inputArity),
-  --           optionalInputs = slice(components, 1, optionalInputArity),
-  --           excludedInputs = slice(components, 1, excludedInputArity),
-  --           outputs = slice(components, 1, outputArity),
-  --         })
+  -- for _, entityInput in ipairs({ false, true }) do
+  --   for inputArity = 1, 3 do
+  --     for optionalInputArity = 0, 3 do
+  --       for excludedInputArity = 0, 3 do
+  --         for outputArity = 0, 3 do
+  --           sparrow.newQuery(database, {
+  --             entityInput = entityInput,
+  --             inputs = slice(components, 1, inputArity),
+  --             optionalInputs = slice(components, 1, optionalInputArity),
+  --             excludedInputs = slice(components, 1, excludedInputArity),
+  --             outputs = slice(components, 1, outputArity),
+  --           })
+  --         end
   --       end
   --     end
   --   end
@@ -77,7 +79,7 @@ end
 
 function love.update(dt)
   for i = 1, 100 do
-    if database:getRowCount() < 100000 then
+    if database:getRowCount() < 1000000 then
       local x = love.math.random() * 2 - 1
       local y = love.math.random() * 2 - 1
 
@@ -88,7 +90,7 @@ function love.update(dt)
     end
   end
 
-  updatePositionQuery:forEach(function(entity, position, velocity)
+  updatePositionQuery:forEach(function(position, velocity)
     -- position = position + velocity * dt
 
     position.x = position.x + velocity.x * dt

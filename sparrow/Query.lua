@@ -1,11 +1,9 @@
 local Class = require("sparrow.Class")
-local logMod = require("sparrow.log")
 local tableMod = require("sparrow.table")
 
 local concat = assert(table.concat)
 local copy = assert(tableMod.copy)
 local insert = assert(table.insert)
-local log = assert(logMod.log)
 local sort = assert(table.sort)
 local values = assert(tableMod.values)
 
@@ -27,22 +25,26 @@ local function getColumns(database, components)
   return columns
 end
 
-local function generateForEachFunction(
+local function generateForEachCode(
+  entityInput,
   inputArity,
   optionalInputArity,
   excludedInputArity,
-  outputArity
+  outputArity,
+  buffer
 )
   assert(inputArity >= 1, "Not implemented")
 
-  buffer = {}
+  buffer = buffer or {}
   insert(
     buffer,
-    [[return function(query, system)
+    [[
+return function(query, system)
   query:prepare()
+  query:_sortInputs()
 
-  for i = query._sortedInputColumns[1]._size - 1, 0, -1 do
-    local entity = query._sortedInputColumns[1]._entities[i]
+  for i = query._sortedInputColumns[1]:getSize() - 1, 0, -1 do
+    local entity = query._sortedInputColumns[1]:getEntity(i)
 
     if ]]
   )
@@ -57,7 +59,7 @@ local function generateForEachFunction(
 
       insert(buffer, "query._sortedInputColumns[")
       insert(buffer, i)
-      insert(buffer, "]._indices[entity]")
+      insert(buffer, "]:getIndex(entity)")
     end
 
     for i = 1, excludedInputArity do
@@ -67,7 +69,7 @@ local function generateForEachFunction(
 
       insert(buffer, "not query._sortedExcludedInputColumns[")
       insert(buffer, i)
-      insert(buffer, "]._indices[entity]")
+      insert(buffer, "]:getIndex(entity)")
     end
   end
 
@@ -88,18 +90,28 @@ local function generateForEachFunction(
     insert(buffer, " = ")
   end
 
-  insert(buffer, "system(entity")
+  insert(buffer, "system(")
+
+  if entityInput then
+    insert(buffer, "entity")
+  else
+    insert(buffer, "\n          ")
+  end
 
   for i = 1, inputArity do
-    insert(buffer, ",\n          query._inputColumns[")
+    if entityInput or i >= 2 then
+      insert(buffer, ",\n          ")
+    end
+
+    insert(buffer, "query._inputColumns[")
     insert(buffer, i)
-    insert(buffer, "]:getValue(entity)")
+    insert(buffer, "]:getCell(entity)")
   end
 
   for i = 1, optionalInputArity do
     insert(buffer, ",\n          query._optionalInputColumns[")
     insert(buffer, i)
-    insert(buffer, "]:getValue(entity)")
+    insert(buffer, "]:getCell(entity)")
   end
 
   insert(buffer, ")\n")
@@ -108,7 +120,7 @@ local function generateForEachFunction(
     for i = 1, outputArity do
       insert(buffer, "      query._outputColumns[")
       insert(buffer, i)
-      insert(buffer, "]:setValue(output")
+      insert(buffer, "]:setCell(entity, output")
       insert(buffer, i)
       insert(buffer, ")\n")
     end
@@ -123,51 +135,49 @@ end
 ]]
   )
 
-  local code = concat(buffer)
-  local f, message = load(code)
-
-  if message then
-    log("error", message .. "\n\n" .. code)
-  else
-    log(
-      "info",
-      "Generated for-each function with arity "
-        .. inputArity
-        .. ", "
-        .. optionalInputArity
-        .. ", "
-        .. excludedInputArity
-        .. ", "
-        .. outputArity
-        .. "\n\n"
-        .. code
-    )
-  end
-
-  return f()
+  return buffer
 end
 
 function M:init(database, config)
   self._database = assert(database)
   self._config = copy(config or {})
 
-  self._databaseVersion = 0
-  assert(self._databaseVersion ~= self._database._version)
+  self._version = 0
+  assert(self._version ~= self._database._version)
 
-  self.forEach = generateForEachFunction(
+  local buffer = generateForEachCode(
+    self._config.entityInput or false,
     self._config.inputs and #self._config.inputs or 0,
     self._config.optionalInputs and #self._config.optionalInputs or 0,
     self._config.excludedInputs and #self._config.excludedInputs or 0,
     self._config.outputs and #self._config.outputs or 0
   )
 
+  self._forEachCode = concat(buffer)
+  local f, message = load(self._forEachCode)
+
+  if message then
+    error(message .. "\n\n" .. self._forEachCode)
+  end
+
+  self.forEach = f()
   self:prepare()
 end
 
-function M:prepare()
-  if self._databaseVersion ~= self._database._version then
-    log("info", "Binding query to database version " .. self._database._version)
+function M:getDatabase()
+  return self._database
+end
 
+function M:getVersion()
+  return self._version
+end
+
+function M:getForEachCode()
+  return self._forEachCode
+end
+
+function M:prepare()
+  if self._version ~= self._database._version then
     self._inputColumns = getColumns(self._database, self._config.inputs or {})
     self._optionalInputColumns =
       getColumns(self._database, self._config.optionalInputs or {})
@@ -178,9 +188,11 @@ function M:prepare()
     self._sortedInputColumns = values(self._inputColumns)
     self._sortedExcludedInputColumns = values(self._excludedInputColumns)
 
-    self._databaseVersion = self._database._version
+    self._version = self._database._version
   end
+end
 
+function M:_sortInputs()
   -- For required inputs, filter rows by smallest column first
   sort(self._sortedInputColumns, function(a, b)
     return a._size < b._size
