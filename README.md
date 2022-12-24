@@ -10,4 +10,4 @@ The columns are the primary data structures for storing and accessing values, wh
 
 ## Queries and systems
 
-You can select multiple columns in a query to iterate over all matching rows.
+Sparrow supports queries for iterating over groups of columns. A query can select multiple columns and apply a system (function) to each matching row.
