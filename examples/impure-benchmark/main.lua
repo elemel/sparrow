@@ -18,7 +18,6 @@ function love.load()
 
   updatePositionQuery = sparrow.newQuery(database, {
     inputs = { "position", "velocity" },
-    outputs = { "position" },
   })
 end
 
@@ -38,8 +37,6 @@ function love.update(dt)
   updatePositionQuery:forEach(function(position, velocity)
     position.x = position.x + velocity.x * dt
     position.y = position.y + velocity.y * dt
-
-    return position
   end)
 end
 
