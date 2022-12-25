@@ -31,6 +31,34 @@ function M:getRowCount()
   return self._rowCount
 end
 
+function M:getCell(entity, component)
+  if not self._rows[entity] then
+    error("No such row: " .. entity)
+  end
+
+  local column = self._columns[component]
+
+  if not column then
+    error("No such column: " .. component)
+  end
+
+  return column:getCell(entity)
+end
+
+function M:setCell(entity, component, value)
+  if not self._rows[entity] then
+    error("No such row: " .. entity)
+  end
+
+  local column = self._columns[component]
+
+  if not column then
+    error("No such column: " .. component)
+  end
+
+  column:setCell(entity, value)
+end
+
 function M:getVersion()
   return self._version
 end
