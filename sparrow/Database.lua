@@ -33,12 +33,14 @@ end
 
 function M:getCell(entity, component)
   if not self._rows[entity] then
+    assert(type(entity) == "number", "Invalid entity type")
     error("No such row: " .. entity)
   end
 
   local column = self._columns[component]
 
   if not column then
+    assert(type(component) == "string", "Invalid component type")
     error("No such column: " .. component)
   end
 
@@ -47,12 +49,14 @@ end
 
 function M:setCell(entity, component, value)
   if not self._rows[entity] then
+    assert(type(entity) == "number", "Invalid entity type")
     error("No such row: " .. entity)
   end
 
   local column = self._columns[component]
 
   if not column then
+    assert(type(component) == "string", "Invalid component type")
     error("No such column: " .. component)
   end
 
