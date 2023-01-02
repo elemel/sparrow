@@ -17,7 +17,8 @@ function love.load()
   sparrow.newColumn(database, "velocity", "vec2")
 
   updatePositionQuery = sparrow.newQuery(database, {
-    inputs = { "position", "velocity" },
+    inclusions = { "position", "velocity" },
+    arguments = { "position", "velocity" },
   })
 end
 
