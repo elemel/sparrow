@@ -26,7 +26,6 @@ local function getColumns(database, components)
 end
 
 local function generateForEachCode(inclusions, exclusions, arguments, results, buffer)
-  print(unpack(inclusions))
   assert(#inclusions >= 1, "Not implemented")
   buffer = buffer or {}
 
