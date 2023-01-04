@@ -8,7 +8,7 @@ ffi.cdef([[
 ]])
 
 local database
-local updatePositionQuery
+local query
 
 function love.load()
   database = sparrow.newDatabase()
@@ -16,7 +16,7 @@ function love.load()
   sparrow.newColumn(database, "position", "vec2")
   sparrow.newColumn(database, "velocity", "vec2")
 
-  updatePositionQuery = sparrow.newQuery(database, {
+  query = sparrow.newQuery(database, {
     inclusions = { "position", "velocity" },
     arguments = { "position", "velocity" },
   })
@@ -35,7 +35,7 @@ function love.update(dt)
     end
   end
 
-  updatePositionQuery:forEach(function(position, velocity)
+  query:forEach(function(position, velocity)
     position.x = position.x + velocity.x * dt
     position.y = position.y + velocity.y * dt
   end)
