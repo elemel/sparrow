@@ -25,7 +25,13 @@ local function getColumns(database, components)
   return columns
 end
 
-local function generateForEachCode(inclusions, exclusions, arguments, results, buffer)
+local function generateForEachCode(
+  inclusions,
+  exclusions,
+  arguments,
+  results,
+  buffer
+)
   assert(#inclusions >= 1, "Not implemented")
   buffer = buffer or {}
 
@@ -135,7 +141,12 @@ function M:init(database, config)
   self._arguments = copy(config.arguments or {})
   self._results = copy(config.results or {})
 
-  local buffer = generateForEachCode(self._inclusions, self._exclusions, self._arguments, self._results)
+  local buffer = generateForEachCode(
+    self._inclusions,
+    self._exclusions,
+    self._arguments,
+    self._results
+  )
 
   self._forEachCode = concat(buffer)
   local f, message = load(self._forEachCode)
