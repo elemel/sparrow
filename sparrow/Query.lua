@@ -62,7 +62,7 @@ return function(query, system)
     end
 
     for i = 1, #exclusions do
-      if #inclusion >= 2 or i >= 2 then
+      if #inclusions >= 2 or i >= 2 then
         insert(buffer, " and\n        ")
       end
 
