@@ -28,8 +28,19 @@ function M:init(database, component, valueType)
   database._version = database._version + 1
 end
 
-function M:delete()
-  self._database:deleteColumn(self._component)
+function M:drop()
+  assert(self._database._columns[self._component] == self, "Already dropped")
+
+  for i = self._size - 1, 0, -1 do
+    local entity = self._entities[i]
+
+    local rowArchetype = self._database._rowArchetypes[entity]
+    assert(rowArchetype[self._component])
+    rowArchetype[self._component] = nil
+  end
+
+  self._database._columns[self._component] = nil
+  self._database._version = self._database._version + 1
 end
 
 function M:getDatabase()
@@ -72,6 +83,9 @@ function M:setCell(entity, value)
     if value ~= nil then
       self._values[index] = value
     else
+      local rowArchetype = assert(self._database._rowArchetypes[entity])
+      assert(rowArchetype[self._component])
+
       self._size = self._size - 1
       local lastEntity = self._entities[self._size]
 
@@ -82,9 +96,19 @@ function M:setCell(entity, value)
       self._indices[entity] = nil
       self._entities[self._size] = 0
       self._values[self._size] = self._defaultValue
+
+      rowArchetype[self._component] = nil
     end
   else
     if value ~= nil then
+      local rowArchetype = self._database._rowArchetypes[entity]
+      assert(not rowArchetype[self._component])
+
+      if rowArchetype == nil then
+        assert(type(entity) == "number", "Invalid entity type")
+        error("No such row: " .. entity)
+      end
+
       if self._size == self._capacity then
         local newCapacity = self._capacity * 2
 
@@ -110,6 +134,8 @@ function M:setCell(entity, value)
       self._entities[self._size] = entity
       self._values[self._size] = value
       self._size = self._size + 1
+
+      rowArchetype[self._component] = true
     end
   end
 end
