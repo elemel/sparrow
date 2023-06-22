@@ -13,12 +13,7 @@ function M:init()
   self._entityType = "double"
   self._entitySize = ffi.sizeof(self._entityType)
   self._entityArrayType = self._entityType .. "[?]"
-  self._nextEntity = 1
-end
-
-function M:generateEntity()
-  self._nextEntity = self._nextEntity + 1
-  return self._nextEntity - 1
+  self._maxEntity = 0
 end
 
 function M:getColumn(component)
@@ -83,7 +78,8 @@ function M:getVersion()
 end
 
 function M:insertRow(cells)
-  local entity = self:generateEntity()
+  local entity = self._maxEntity + 1
+  self._maxEntity = entity
 
   self._rowArchetypes[entity] = {}
   self._rowCount = self._rowCount + 1
