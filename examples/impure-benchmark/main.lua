@@ -31,7 +31,7 @@ function love.update(dt)
       local dx = love.math.random() * 2 - 1
       local dy = love.math.random() * 2 - 1
 
-      sparrow.newRow(database, { position = { x, y }, velocity = { dx, dy } })
+      database:insertRow({ position = { x, y }, velocity = { dx, dy } })
     end
   end
 
