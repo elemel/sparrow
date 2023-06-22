@@ -7,7 +7,7 @@ function M:init()
   self._columns = {}
   self._version = 1
 
-  self._rowArchetypes = {}
+  self._archetypes = {}
   self._rowCount = 0
 
   self._entityType = "double"
@@ -20,17 +20,17 @@ function M:getColumn(component)
   return self._columns[component]
 end
 
-function M:getRowArchetype(entity, archetype)
-  local rowArchetype = self._rowArchetypes[entity]
+function M:getArchetype(entity, archetype)
+  local entityArchetype = self._archetypes[entity]
 
-  if rowArchetype == nil then
+  if entityArchetype == nil then
     assert(type(entity) == "number", "Invalid entity type")
     error("No such row: " .. entity)
   end
 
   archetype = archetype or {}
 
-  for component in pairs(rowArchetype) do
+  for component in pairs(entityArchetype) do
     archetype[component] = true
   end
 
@@ -42,11 +42,6 @@ function M:getRowCount()
 end
 
 function M:getCell(entity, component)
-  if not self._rowArchetypes[entity] then
-    assert(type(entity) == "number", "Invalid entity type")
-    error("No such row: " .. entity)
-  end
-
   local column = self._columns[component]
 
   if not column then
@@ -58,11 +53,6 @@ function M:getCell(entity, component)
 end
 
 function M:setCell(entity, component, value)
-  if not self._rowArchetypes[entity] then
-    assert(type(entity) == "number", "Invalid entity type")
-    error("No such row: " .. entity)
-  end
-
   local column = self._columns[component]
 
   if not column then
@@ -81,7 +71,7 @@ function M:insertRow(cells)
   local entity = self._maxEntity + 1
   self._maxEntity = entity
 
-  self._rowArchetypes[entity] = {}
+  self._archetypes[entity] = {}
   self._rowCount = self._rowCount + 1
 
   if cells then
@@ -94,19 +84,19 @@ function M:insertRow(cells)
 end
 
 function M:deleteRow(entity)
-  local rowArchetype = self._rowArchetypes[entity]
+  local archetype = self._archetypes[entity]
 
-  if not rowArchetype then
+  if not archetype then
     assert(type(entity) == "number", "Invalid entity type")
     error("No such row: " .. entity)
   end
 
-  for component in pairs(rowArchetype) do
+  for component in pairs(archetype) do
     local column = self._columns[component]
     column:setCell(entity, nil)
   end
 
-  self._rowArchetypes[entity] = nil
+  self._archetypes[entity] = nil
   self._rowCount = self._rowCount - 1
 end
 

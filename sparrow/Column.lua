@@ -35,9 +35,9 @@ function M:drop()
   for i = self._size - 1, 0, -1 do
     local entity = self._entities[i]
 
-    local rowArchetype = self._database._rowArchetypes[entity]
-    assert(rowArchetype[self._component])
-    rowArchetype[self._component] = nil
+    local archetype = self._database._archetypes[entity]
+    assert(archetype[self._component])
+    archetype[self._component] = nil
   end
 
   self._database._columns[self._component] = nil
@@ -74,7 +74,17 @@ end
 
 function M:getCell(entity)
   local index = self._indices[entity]
-  return index and self._values[index]
+
+  if index then
+    return self._values[index]
+  else
+    if not self._database._archetypes[entity] then
+      assert(type(entity) == "number", "Invalid entity type")
+      error("No such row: " .. entity)
+    end
+
+    return nil
+  end
 end
 
 function M:setCell(entity, value)
@@ -84,8 +94,8 @@ function M:setCell(entity, value)
     if value ~= nil then
       self._values[index] = value
     else
-      local rowArchetype = assert(self._database._rowArchetypes[entity])
-      assert(rowArchetype[self._component])
+      local archetype = assert(self._database._archetypes[entity])
+      assert(archetype[self._component])
 
       self._size = self._size - 1
       local lastEntity = self._entities[self._size]
@@ -98,18 +108,18 @@ function M:setCell(entity, value)
       self._entities[self._size] = 0
       self._values[self._size] = self._defaultValue
 
-      rowArchetype[self._component] = nil
+      archetype[self._component] = nil
     end
   else
+    local archetype = self._database._archetypes[entity]
+    assert(not archetype[self._component])
+
+    if not archetype then
+      assert(type(entity) == "number", "Invalid entity type")
+      error("No such row: " .. entity)
+    end
+
     if value ~= nil then
-      local rowArchetype = self._database._rowArchetypes[entity]
-      assert(not rowArchetype[self._component])
-
-      if rowArchetype == nil then
-        assert(type(entity) == "number", "Invalid entity type")
-        error("No such row: " .. entity)
-      end
-
       if self._size == self._capacity then
         local newCapacity = self._capacity * 2
 
@@ -138,7 +148,7 @@ function M:setCell(entity, value)
       self._values[self._size] = value
       self._size = self._size + 1
 
-      rowArchetype[self._component] = true
+      archetype[self._component] = true
     end
   end
 end
