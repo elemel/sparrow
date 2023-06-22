@@ -27,6 +27,7 @@ function M:init(database, component, valueType)
 
   database._columns[component] = self
   database._version = database._version + 1
+  database._columnCount = database._columnCount + 1
 end
 
 function M:drop()
@@ -42,6 +43,8 @@ function M:drop()
 
   self._database._columns[self._component] = nil
   self._database._version = self._database._version + 1
+  self._database._columnCount = self._database._columnCount - 1
+  self._database._cellCount = self._database._cellCount - self._size
   self._database = nil
 end
 
@@ -55,6 +58,10 @@ end
 
 function M:getValueType()
   return self._valueType
+end
+
+function M:getValueSize()
+  return self._valueSize
 end
 
 function M:getSize()
@@ -110,6 +117,7 @@ function M:setCell(entity, value)
       self._values[self._size] = self._defaultValue
 
       archetype[self._component] = nil
+      self._database._cellCount = self._database._cellCount - 1
     end
   else
     local archetype = self._database._archetypes[entity]
@@ -150,6 +158,7 @@ function M:setCell(entity, value)
       self._size = self._size + 1
 
       archetype[self._component] = true
+      self._database._cellCount = self._database._cellCount + 1
     end
   end
 end

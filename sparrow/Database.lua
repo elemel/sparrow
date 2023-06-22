@@ -4,17 +4,28 @@ local ffi = require("ffi")
 
 local M = Class.new()
 
-function M:init()
+function M:init(entityType)
+  self._entityType = entityType or "double"
+  self._entitySize = ffi.sizeof(self._entityType)
+  self._entityArrayType = self._entityType .. "[?]"
+
   self._columns = {}
   self._version = 1
 
-  self._archetypes = {}
-  self._rowCount = 0
-
-  self._entityType = "double"
-  self._entitySize = ffi.sizeof(self._entityType)
-  self._entityArrayType = self._entityType .. "[?]"
   self._maxEntity = 0
+  self._archetypes = {}
+
+  self._columnCount = 0
+  self._rowCount = 0
+  self._cellCount = 0
+end
+
+function M:getEntityType()
+  return self._entityType
+end
+
+function M:getEntitySize()
+  return self._entitySize
 end
 
 function M:createColumn(component, valueType)
@@ -45,7 +56,7 @@ function M:getArchetype(entity, archetype)
 
   if not entityArchetype then
     assert(type(entity) == "number", "Invalid entity type")
-    error("No such row: " .. entity)
+    return nil
   end
 
   archetype = archetype or {}
@@ -55,10 +66,6 @@ function M:getArchetype(entity, archetype)
   end
 
   return archetype
-end
-
-function M:getRowCount()
-  return self._rowCount
 end
 
 function M:getCell(entity, component)
@@ -118,6 +125,18 @@ function M:deleteRow(entity)
 
   self._archetypes[entity] = nil
   self._rowCount = self._rowCount - 1
+end
+
+function M:getColumnCount()
+  return self._columnCount
+end
+
+function M:getRowCount()
+  return self._rowCount
+end
+
+function M:getCellCount()
+  return self._cellCount
 end
 
 return M
