@@ -6,12 +6,12 @@ local M = Class.new()
 function M:init(database, component, valueType)
   self._database = assert(database)
   self._component = assert(component)
-
-  if self._database._columns[self._component] then
-    error("Duplicate column: " .. self._component)
-  end
-
   self._valueType = valueType
+
+  assert(type(component) == "string", "Invalid component type")
+  assert(valueType == nil or type(valueType) == "string", "Invalid value type")
+  assert(not database._columns[component])
+
   self._valueSize = valueType and ffi.sizeof(valueType)
   self._valueArrayType = valueType and valueType .. "[?]"
   self._defaultValue = valueType and ffi.new(valueType)
@@ -30,7 +30,7 @@ function M:init(database, component, valueType)
 end
 
 function M:drop()
-  assert(self._database._columns[self._component] == self, "Already dropped")
+  assert(self._database, "Already dropped")
 
   for i = self._size - 1, 0, -1 do
     local entity = self._entities[i]
@@ -42,6 +42,7 @@ function M:drop()
 
   self._database._columns[self._component] = nil
   self._database._version = self._database._version + 1
+  self._database = nil
 end
 
 function M:getDatabase()

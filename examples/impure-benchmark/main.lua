@@ -13,8 +13,8 @@ local query
 function love.load()
   database = sparrow.newDatabase()
 
-  sparrow.newColumn(database, "position", "vec2")
-  sparrow.newColumn(database, "velocity", "vec2")
+  database:createColumn("position", "vec2")
+  database:createColumn("velocity", "vec2")
 
   query = sparrow.newQuery(database, {
     inclusions = { "position", "velocity" },

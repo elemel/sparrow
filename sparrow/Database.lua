@@ -1,4 +1,5 @@
 local Class = require("sparrow.Class")
+local Column = require("sparrow.Column")
 local ffi = require("ffi")
 
 local M = Class.new()
@@ -16,14 +17,33 @@ function M:init()
   self._maxEntity = 0
 end
 
+function M:createColumn(component, valueType)
+  if self._columns[component] then
+    error("Duplicate column: " .. component)
+  end
+
+  return Column.new(self, component, valueType)
+end
+
 function M:getColumn(component)
   return self._columns[component]
+end
+
+function M:dropColumn(component)
+  local column = self._columns[component]
+
+  if not column then
+    assert(type(component) == "string", "Invalid component type")
+    error("No such column: " .. component)
+  end
+
+  column:drop()
 end
 
 function M:getArchetype(entity, archetype)
   local entityArchetype = self._archetypes[entity]
 
-  if entityArchetype == nil then
+  if not entityArchetype then
     assert(type(entity) == "number", "Invalid entity type")
     error("No such row: " .. entity)
   end
