@@ -1,4 +1,5 @@
 local Class = require("sparrow.Class")
+local Column = require("sparrow.Column")
 local ffi = require("ffi")
 
 local M = Class.new()
@@ -7,35 +8,49 @@ function M:init()
   self._columns = {}
   self._version = 1
 
-  self._rowArchetypes = {}
+  self._archetypes = {}
   self._rowCount = 0
 
   self._entityType = "double"
   self._entitySize = ffi.sizeof(self._entityType)
   self._entityArrayType = self._entityType .. "[?]"
-  self._nextEntity = 1
+  self._maxEntity = 0
 end
 
-function M:generateEntity()
-  self._nextEntity = self._nextEntity + 1
-  return self._nextEntity - 1
+function M:createColumn(component, valueType)
+  if self._columns[component] then
+    error("Duplicate column: " .. component)
+  end
+
+  return Column.new(self, component, valueType)
 end
 
 function M:getColumn(component)
   return self._columns[component]
 end
 
-function M:getRowArchetype(entity, archetype)
-  local rowArchetype = self._rowArchetypes[entity]
+function M:dropColumn(component)
+  local column = self._columns[component]
 
-  if rowArchetype == nil then
+  if not column then
+    assert(type(component) == "string", "Invalid component type")
+    error("No such column: " .. component)
+  end
+
+  column:drop()
+end
+
+function M:getArchetype(entity, archetype)
+  local entityArchetype = self._archetypes[entity]
+
+  if not entityArchetype then
     assert(type(entity) == "number", "Invalid entity type")
     error("No such row: " .. entity)
   end
 
   archetype = archetype or {}
 
-  for component in pairs(rowArchetype) do
+  for component in pairs(entityArchetype) do
     archetype[component] = true
   end
 
@@ -47,11 +62,6 @@ function M:getRowCount()
 end
 
 function M:getCell(entity, component)
-  if not self._rowArchetypes[entity] then
-    assert(type(entity) == "number", "Invalid entity type")
-    error("No such row: " .. entity)
-  end
-
   local column = self._columns[component]
 
   if not column then
@@ -63,11 +73,6 @@ function M:getCell(entity, component)
 end
 
 function M:setCell(entity, component, value)
-  if not self._rowArchetypes[entity] then
-    assert(type(entity) == "number", "Invalid entity type")
-    error("No such row: " .. entity)
-  end
-
   local column = self._columns[component]
 
   if not column then
@@ -83,9 +88,10 @@ function M:getVersion()
 end
 
 function M:insertRow(cells)
-  local entity = self:generateEntity()
+  local entity = self._maxEntity + 1
+  self._maxEntity = entity
 
-  self._rowArchetypes[entity] = {}
+  self._archetypes[entity] = {}
   self._rowCount = self._rowCount + 1
 
   if cells then
@@ -98,19 +104,19 @@ function M:insertRow(cells)
 end
 
 function M:deleteRow(entity)
-  local rowArchetype = self._rowArchetypes[entity]
+  local archetype = self._archetypes[entity]
 
-  if not rowArchetype then
+  if not archetype then
     assert(type(entity) == "number", "Invalid entity type")
     error("No such row: " .. entity)
   end
 
-  for component in pairs(rowArchetype) do
+  for component in pairs(archetype) do
     local column = self._columns[component]
     column:setCell(entity, nil)
   end
 
-  self._rowArchetypes[entity] = nil
+  self._archetypes[entity] = nil
   self._rowCount = self._rowCount - 1
 end
 
