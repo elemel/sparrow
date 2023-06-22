@@ -121,12 +121,13 @@ function M:setCell(entity, value)
     end
   else
     local archetype = self._database._archetypes[entity]
-    assert(not archetype[self._component])
 
     if not archetype then
       assert(type(entity) == "number", "Invalid entity type")
       error("No such row: " .. entity)
     end
+
+    assert(not archetype[self._component])
 
     if value ~= nil then
       if self._size == self._capacity then

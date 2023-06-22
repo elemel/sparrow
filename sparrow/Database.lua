@@ -51,21 +51,72 @@ function M:dropColumn(component)
   column:drop()
 end
 
-function M:getArchetype(entity, archetype)
-  local entityArchetype = self._archetypes[entity]
+function M:insertRow(cells)
+  local entity = self._maxEntity + 1
+  self._maxEntity = entity
 
-  if not entityArchetype then
+  self._archetypes[entity] = {}
+  self._rowCount = self._rowCount + 1
+
+  if cells then
+    for component, value in pairs(cells) do
+      self:setCell(entity, component, value)
+    end
+  end
+
+  return entity
+end
+
+function M:getRow(entity, result)
+  local archetype = self._archetypes[entity]
+
+  if not archetype then
     assert(type(entity) == "number", "Invalid entity type")
-    return nil
+    error("No such row: " .. entity)
   end
 
-  archetype = archetype or {}
+  result = result or {}
 
-  for component in pairs(entityArchetype) do
-    archetype[component] = true
+  for component in pairs(archetype) do
+    local column = self._columns[component]
+    result[component] = column:getCell(entity)
   end
 
-  return archetype
+  return result
+end
+
+function M:getArchetype(entity, result)
+  local archetype = self._archetypes[entity]
+
+  if not archetype then
+    assert(type(entity) == "number", "Invalid entity type")
+    error("No such row: " .. entity)
+  end
+
+  result = result or {}
+
+  for component in pairs(archetype) do
+    result[component] = true
+  end
+
+  return result
+end
+
+function M:deleteRow(entity)
+  local archetype = self._archetypes[entity]
+
+  if not archetype then
+    assert(type(entity) == "number", "Invalid entity type")
+    error("No such row: " .. entity)
+  end
+
+  for component in pairs(archetype) do
+    local column = self._columns[component]
+    column:setCell(entity, nil)
+  end
+
+  self._archetypes[entity] = nil
+  self._rowCount = self._rowCount - 1
 end
 
 function M:getCell(entity, component)
@@ -92,39 +143,6 @@ end
 
 function M:getVersion()
   return self._version
-end
-
-function M:insertRow(cells)
-  local entity = self._maxEntity + 1
-  self._maxEntity = entity
-
-  self._archetypes[entity] = {}
-  self._rowCount = self._rowCount + 1
-
-  if cells then
-    for component, value in pairs(cells) do
-      self:setCell(entity, component, value)
-    end
-  end
-
-  return entity
-end
-
-function M:deleteRow(entity)
-  local archetype = self._archetypes[entity]
-
-  if not archetype then
-    assert(type(entity) == "number", "Invalid entity type")
-    error("No such row: " .. entity)
-  end
-
-  for component in pairs(archetype) do
-    local column = self._columns[component]
-    column:setCell(entity, nil)
-  end
-
-  self._archetypes[entity] = nil
-  self._rowCount = self._rowCount - 1
 end
 
 function M:getColumnCount()
