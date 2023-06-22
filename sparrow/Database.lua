@@ -1,5 +1,5 @@
 local Class = require("sparrow.Class")
-local DataType = require("sparrow.DataType")
+local ffi = require("ffi")
 
 local M = Class.new()
 
@@ -10,7 +10,9 @@ function M:init()
   self._rowArchetypes = {}
   self._rowCount = 0
 
-  self._entityType = DataType.new("double")
+  self._entityType = "double"
+  self._entitySize = ffi.sizeof(self._entityType)
+  self._entityArrayType = self._entityType .. "[?]"
   self._nextEntity = 1
 end
 

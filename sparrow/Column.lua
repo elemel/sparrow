@@ -1,5 +1,4 @@
 local Class = require("sparrow.Class")
-local DataType = require("sparrow.DataType")
 local ffi = require("ffi")
 
 local M = Class.new()
@@ -13,15 +12,17 @@ function M:init(database, component, valueType)
   end
 
   self._valueType = valueType
-  self._dataType = self._valueType and DataType.new(self._valueType)
-  self._defaultValue = self._dataType and self._dataType.type()
+  self._valueSize = valueType and ffi.sizeof(valueType)
+  self._valueArrayType = valueType and valueType .. "[?]"
+  self._defaultValue = valueType and ffi.new(valueType)
 
   self._size = 0
   self._capacity = 2
 
   self._indices = {}
-  self._entities = database._entityType.arrayType(self._capacity)
-  self._values = self._dataType and self._dataType.arrayType(self._capacity)
+  self._entities = ffi.new(database._entityArrayType, self._capacity)
+  self._values = self._valueArrayType
+      and ffi.new(self._valueArrayType, self._capacity)
     or {}
 
   database._columns[component] = self
@@ -112,16 +113,18 @@ function M:setCell(entity, value)
       if self._size == self._capacity then
         local newCapacity = self._capacity * 2
 
-        local newEntities = self._database._entityType.arrayType(newCapacity)
+        local newEntities =
+          ffi.new(self._database._entityArrayType, newCapacity)
+
         ffi.copy(
           newEntities,
           self._entities,
-          self._database._entityType.size * self._size
+          self._database._entitySize * self._size
         )
 
-        if self._dataType then
-          local newValues = self._dataType.arrayType(newCapacity)
-          ffi.copy(newValues, self._values, self._dataType.size * self._size)
+        if self._valueArrayType then
+          local newValues = ffi.new(self._valueArrayType, newCapacity)
+          ffi.copy(newValues, self._values, self._valueSize * self._size)
 
           self._values = newValues
         end
