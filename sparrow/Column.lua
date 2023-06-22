@@ -8,9 +8,9 @@ function M:init(database, component, valueType)
   self._component = assert(component)
   self._valueType = valueType
 
-  assert(type(component) == "string", "Invalid component type")
-  assert(valueType == nil or type(valueType) == "string", "Invalid value type")
-  assert(not database._columns[component])
+  if database._columns[component] then
+    error("Duplicate column: " .. component)
+  end
 
   self._valueSize = valueType and ffi.sizeof(valueType)
   self._valueArrayType = valueType and valueType .. "[?]"
@@ -87,7 +87,6 @@ function M:getCell(entity)
     return self._values[index]
   else
     if not self._database._archetypes[entity] then
-      assert(type(entity) == "number", "Invalid entity type")
       error("No such row: " .. entity)
     end
 
@@ -123,7 +122,6 @@ function M:setCell(entity, value)
     local archetype = self._database._archetypes[entity]
 
     if not archetype then
-      assert(type(entity) == "number", "Invalid entity type")
       error("No such row: " .. entity)
     end
 

@@ -29,10 +29,6 @@ function M:getEntitySize()
 end
 
 function M:createColumn(component, valueType)
-  if self._columns[component] then
-    error("Duplicate column: " .. component)
-  end
-
   return Column.new(self, component, valueType)
 end
 
@@ -44,7 +40,6 @@ function M:dropColumn(component)
   local column = self._columns[component]
 
   if not column then
-    assert(type(component) == "string", "Invalid component type")
     error("No such column: " .. component)
   end
 
@@ -71,7 +66,6 @@ function M:getRow(entity, result)
   local archetype = self._archetypes[entity]
 
   if not archetype then
-    assert(type(entity) == "number", "Invalid entity type")
     error("No such row: " .. entity)
   end
 
@@ -89,7 +83,6 @@ function M:getArchetype(entity, result)
   local archetype = self._archetypes[entity]
 
   if not archetype then
-    assert(type(entity) == "number", "Invalid entity type")
     error("No such row: " .. entity)
   end
 
@@ -106,7 +99,6 @@ function M:deleteRow(entity)
   local archetype = self._archetypes[entity]
 
   if not archetype then
-    assert(type(entity) == "number", "Invalid entity type")
     error("No such row: " .. entity)
   end
 
@@ -123,7 +115,6 @@ function M:getCell(entity, component)
   local column = self._columns[component]
 
   if not column then
-    assert(type(component) == "string", "Invalid component type")
     error("No such column: " .. component)
   end
 
@@ -134,7 +125,6 @@ function M:setCell(entity, component, value)
   local column = self._columns[component]
 
   if not column then
-    assert(type(component) == "string", "Invalid component type")
     error("No such column: " .. component)
   end
 
