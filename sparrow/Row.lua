@@ -29,18 +29,11 @@ function M:getEntity()
 end
 
 function M:getCell(component)
-  local column = self._database._columns[component]
-  return column and column:getCell(self._entity)
+  return self._database:getCell(self._entity, component)
 end
 
 function M:setCell(component, value)
-  local column = self._database._columns[component]
-
-  if not column then
-    error("No such column: " .. component)
-  end
-
-  column:setCell(self._entity, value)
+  self._database:setCell(self._entity, component, value)
 end
 
 return M
