@@ -23,7 +23,7 @@ function love.load()
 end
 
 function love.update(dt)
-  for i = 1, 100 do
+  for i = 1, 1000 do
     if database:getRowCount() < 1000000 then
       local x = love.math.random() * 2 - 1
       local y = love.math.random() * 2 - 1
@@ -43,6 +43,13 @@ end
 
 function love.draw()
   love.graphics.print(
-    love.timer.getFPS() .. " FPS, " .. database:getRowCount() .. " rows"
+    love.timer.getFPS()
+      .. " FPS, "
+      .. database:getColumnCount()
+      .. " columns, "
+      .. database:getRowCount()
+      .. " rows, "
+      .. database:getCellCount()
+      .. " cells"
   )
 end

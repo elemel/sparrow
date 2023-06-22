@@ -8,9 +8,9 @@ function M:init(database, component, valueType)
   self._component = assert(component)
   self._valueType = valueType
 
-  assert(type(component) == "string", "Invalid component type")
-  assert(valueType == nil or type(valueType) == "string", "Invalid value type")
-  assert(not database._columns[component])
+  if database._columns[component] then
+    error("Duplicate column: " .. component)
+  end
 
   self._valueSize = valueType and ffi.sizeof(valueType)
   self._valueArrayType = valueType and valueType .. "[?]"
@@ -27,6 +27,7 @@ function M:init(database, component, valueType)
 
   database._columns[component] = self
   database._version = database._version + 1
+  database._columnCount = database._columnCount + 1
 end
 
 function M:drop()
@@ -42,6 +43,8 @@ function M:drop()
 
   self._database._columns[self._component] = nil
   self._database._version = self._database._version + 1
+  self._database._columnCount = self._database._columnCount - 1
+  self._database._cellCount = self._database._cellCount - self._size
   self._database = nil
 end
 
@@ -55,6 +58,10 @@ end
 
 function M:getValueType()
   return self._valueType
+end
+
+function M:getValueSize()
+  return self._valueSize
 end
 
 function M:getSize()
@@ -80,7 +87,6 @@ function M:getCell(entity)
     return self._values[index]
   else
     if not self._database._archetypes[entity] then
-      assert(type(entity) == "number", "Invalid entity type")
       error("No such row: " .. entity)
     end
 
@@ -110,15 +116,16 @@ function M:setCell(entity, value)
       self._values[self._size] = self._defaultValue
 
       archetype[self._component] = nil
+      self._database._cellCount = self._database._cellCount - 1
     end
   else
     local archetype = self._database._archetypes[entity]
-    assert(not archetype[self._component])
 
     if not archetype then
-      assert(type(entity) == "number", "Invalid entity type")
       error("No such row: " .. entity)
     end
+
+    assert(not archetype[self._component])
 
     if value ~= nil then
       if self._size == self._capacity then
@@ -150,6 +157,7 @@ function M:setCell(entity, value)
       self._size = self._size + 1
 
       archetype[self._component] = true
+      self._database._cellCount = self._database._cellCount + 1
     end
   end
 end
