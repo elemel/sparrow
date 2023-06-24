@@ -28,6 +28,10 @@ function M:getEntitySize()
   return self._entitySize
 end
 
+function M:containsColumn(component)
+  return self._columns[component] ~= nil
+end
+
 function M:createColumn(component, valueType)
   return Column.new(self, component, valueType)
 end
@@ -44,6 +48,10 @@ function M:dropColumn(component)
   end
 
   column:drop()
+end
+
+function M:containsRow(entity)
+  return self._archetypes[entity] ~= nil
 end
 
 function M:insertRow(cells)
@@ -109,6 +117,16 @@ function M:deleteRow(entity)
 
   self._archetypes[entity] = nil
   self._rowCount = self._rowCount - 1
+end
+
+function M:containsCell(entity, component)
+  local column = self._columns[component]
+
+  if not column then
+    error("No such column: " .. component)
+  end
+
+  return column:containsCell(entity)
 end
 
 function M:getCell(entity, component)

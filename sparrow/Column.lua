@@ -80,6 +80,10 @@ function M:getEntity(index)
   return self._entities[index]
 end
 
+function M:containsCell(entity)
+  return self._indices[entity] ~= nil
+end
+
 function M:getCell(entity)
   local index = self._indices[entity]
   return index and self._values[index]
