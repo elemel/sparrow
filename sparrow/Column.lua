@@ -82,16 +82,7 @@ end
 
 function M:getCell(entity)
   local index = self._indices[entity]
-
-  if index then
-    return self._values[index]
-  else
-    if not self._database._archetypes[entity] then
-      error("No such row: " .. entity)
-    end
-
-    return nil
-  end
+  return index and self._values[index]
 end
 
 function M:setCell(entity, value)
