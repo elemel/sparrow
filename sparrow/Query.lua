@@ -9,8 +9,8 @@ local values = assert(tableMod.values)
 
 local M = Class.new()
 
-local function getColumns(database, components)
-  local columns = {}
+local function getColumns(database, components, result)
+  result = result or {}
 
   for i, component in ipairs(components) do
     local column = database:getColumn(component)
@@ -19,10 +19,10 @@ local function getColumns(database, components)
       error("No such column: " .. component)
     end
 
-    columns[i] = column
+    result[i] = column
   end
 
-  return columns
+  return result
 end
 
 local function generateForEachCode(
