@@ -13,7 +13,7 @@ local function getColumns(database, components)
   local columns = {}
 
   for i, component in ipairs(components) do
-    local column = database._columns[component]
+    local column = database:getColumn(component)
 
     if not column and component ~= "entity" then
       error("No such column: " .. component)
