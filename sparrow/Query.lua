@@ -9,27 +9,27 @@ local values = assert(tableMod.values)
 
 local M = Class.new()
 
-local function getColumns(database, components)
-  local columns = {}
+local function getColumns(database, components, result)
+  result = result or {}
 
   for i, component in ipairs(components) do
-    local column = database._columns[component]
+    local column = database:getColumn(component)
 
     if not column and component ~= "entity" then
       error("No such column: " .. component)
     end
 
-    columns[i] = column
+    result[i] = column
   end
 
-  return columns
+  return result
 end
 
 local function generateForEachCode(
-  inclusions,
-  exclusions,
   arguments,
   results,
+  inclusions,
+  exclusions,
   buffer
 )
   assert(#inclusions >= 1, "Not implemented")
@@ -135,17 +135,17 @@ function M:init(database, config)
   self._version = 0
   assert(self._version ~= self._database._version)
 
-  self._inclusions = copy(config.inclusions or {})
-  self._exclusions = copy(config.exclusions or {})
-
   self._arguments = copy(config.arguments or {})
   self._results = copy(config.results or {})
 
+  self._inclusions = copy(config.inclusions or {})
+  self._exclusions = copy(config.exclusions or {})
+
   local buffer = generateForEachCode(
-    self._inclusions,
-    self._exclusions,
     self._arguments,
-    self._results
+    self._results,
+    self._inclusions,
+    self._exclusions
   )
 
   self._forEachCode = concat(buffer)
@@ -173,11 +173,11 @@ end
 
 function M:prepare()
   if self._version ~= self._database._version then
-    self._inclusionColumns = getColumns(self._database, self._inclusions or {})
-    self._exclusionColumns = getColumns(self._database, self._exclusions or {})
-
     self._argumentColumns = getColumns(self._database, self._arguments or {})
     self._resultColumns = getColumns(self._database, self._results or {})
+
+    self._inclusionColumns = getColumns(self._database, self._inclusions or {})
+    self._exclusionColumns = getColumns(self._database, self._exclusions or {})
 
     self._sortedInclusionColumns = values(self._inclusionColumns)
     self._sortedExclusionColumns = values(self._exclusionColumns)
