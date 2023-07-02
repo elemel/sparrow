@@ -54,8 +54,15 @@ function M:containsRow(entity)
   return self._archetypes[entity] ~= nil
 end
 
-function M:insertRow(cells)
-  local entity = self._maxEntity + 1
+function M:insertRow(cells, entity)
+  if entity then
+    if self._archetypes[entity] then
+      error("Duplicate row: " .. entity)
+    end
+  else
+    entity = self._maxEntity + 1
+  end
+
   self._maxEntity = entity
 
   self._archetypes[entity] = {}
