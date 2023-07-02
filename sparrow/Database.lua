@@ -94,6 +94,11 @@ function M:getRow(entity, result)
   return result
 end
 
+function M:getNextEntity(entity)
+  local result = next(self._archetypes, entity)
+  return result
+end
+
 function M:getArchetype(entity, result)
   local archetype = self._archetypes[entity]
 
