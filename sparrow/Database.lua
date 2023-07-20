@@ -40,6 +40,16 @@ function M:getColumn(component)
   return self._columns[component]
 end
 
+function M:getValueType(component)
+  local column = self._columns[component]
+
+  if not column then
+    error("No such column: " .. component)
+  end
+
+  return column:getValueType()
+end
+
 function M:dropColumn(component)
   local column = self._columns[component]
 
