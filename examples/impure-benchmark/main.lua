@@ -35,7 +35,7 @@ function love.update(dt)
     end
   end
 
-  query:forEach(function(position, velocity)
+  query:forEach(function(entity, position, velocity)
     position.x = position.x + velocity.x * dt
     position.y = position.y + velocity.y * dt
   end)

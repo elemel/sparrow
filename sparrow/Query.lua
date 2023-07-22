@@ -15,7 +15,7 @@ local function getColumns(database, components, result)
   for i, component in ipairs(components) do
     local column = database:getColumn(component)
 
-    if not column and component ~= "entity" then
+    if not column then
       error("No such column: " .. component)
     end
 
@@ -89,20 +89,12 @@ return function(query, system)
     insert(buffer, " = ")
   end
 
-  insert(buffer, "system(")
+  insert(buffer, "system(entity")
 
   for i = 1, #arguments do
-    if i >= 2 then
-      insert(buffer, ",\n          ")
-    end
-
-    if arguments[i] == "entity" then
-      insert(buffer, "entity")
-    else
-      insert(buffer, "query._argumentColumns[")
-      insert(buffer, i)
-      insert(buffer, "]:getCell(entity)")
-    end
+    insert(buffer, ",\n          query._argumentColumns[")
+    insert(buffer, i)
+    insert(buffer, "]:getCell(entity)")
   end
 
   insert(buffer, ")\n")
