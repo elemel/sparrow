@@ -26,10 +26,10 @@ local function getColumns(database, components, result)
 end
 
 local function generateForEachCode(
-  arguments,
-  results,
   inclusions,
   exclusions,
+  arguments,
+  results,
   buffer
 )
   assert(#inclusions >= 1, "Not implemented")
@@ -127,17 +127,17 @@ function M:init(database, config)
   self._version = 0
   assert(self._version ~= self._database._version)
 
-  self._arguments = copy(config.arguments or {})
-  self._results = copy(config.results or {})
-
   self._inclusions = copy(config.inclusions or {})
   self._exclusions = copy(config.exclusions or {})
 
+  self._arguments = copy(config.arguments or config.inclusions or {})
+  self._results = copy(config.results or {})
+
   local buffer = generateForEachCode(
-    self._arguments,
-    self._results,
     self._inclusions,
-    self._exclusions
+    self._exclusions,
+    self._arguments,
+    self._results
   )
 
   self._forEachCode = concat(buffer)
@@ -165,11 +165,11 @@ end
 
 function M:prepare()
   if self._version ~= self._database._version then
-    self._argumentColumns = getColumns(self._database, self._arguments or {})
-    self._resultColumns = getColumns(self._database, self._results or {})
+    self._inclusionColumns = getColumns(self._database, self._inclusions)
+    self._exclusionColumns = getColumns(self._database, self._exclusions)
 
-    self._inclusionColumns = getColumns(self._database, self._inclusions or {})
-    self._exclusionColumns = getColumns(self._database, self._exclusions or {})
+    self._argumentColumns = getColumns(self._database, self._arguments)
+    self._resultColumns = getColumns(self._database, self._results)
 
     self._sortedInclusionColumns = values(self._inclusionColumns)
     self._sortedExclusionColumns = values(self._exclusionColumns)
