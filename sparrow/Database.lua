@@ -2,6 +2,8 @@ local Class = require("sparrow.Class")
 local Column = require("sparrow.Column")
 local ffi = require("ffi")
 
+local max = assert(math.max)
+
 local M = Class.new()
 
 function M:init(entityType)
@@ -65,15 +67,15 @@ function M:containsRow(entity)
 end
 
 function M:insertRow(cells, entity)
-  if entity then
-    if self._archetypes[entity] then
-      error("Duplicate row: " .. entity)
-    end
-  else
+  if not entity then
     entity = self._maxEntity + 1
   end
 
-  self._maxEntity = entity
+  if self._archetypes[entity] then
+    error("Duplicate row: " .. entity)
+  end
+
+  self._maxEntity = max(entity, self._maxEntity)
 
   self._archetypes[entity] = {}
   self._rowCount = self._rowCount + 1
